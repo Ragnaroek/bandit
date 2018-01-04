@@ -1,4 +1,5 @@
-# bandit
-Bandit Algorithms in Rust
+[![Build Status](https://travis-ci.org/Ragnaroek/bandit.svg?branch=master)](https://travis-ci.org/Ragnaroek/bandit)
 
-Probably start with UCB algorithm
+# Bandit Algorithms in Rust
+
+Probably start with softmax algorithm
