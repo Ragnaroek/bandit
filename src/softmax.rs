@@ -43,7 +43,7 @@ impl<A: Clone + Hash + Eq> MultiArmedBandit<A> for AnnealingSoftmax<A> {
         let rnd : f64 = rand::random();
         let mut cum_prob = 0.0;
         for (arm, v) in self.values.iter() {
-            let prob = ((v / temperature).exp() / z);
+            let prob = (v / temperature).exp() / z;
             cum_prob += prob;
             if cum_prob > rnd {
                 return arm.clone();
@@ -52,6 +52,12 @@ impl<A: Clone + Hash + Eq> MultiArmedBandit<A> for AnnealingSoftmax<A> {
         return self.arms[self.arms.len()-1].clone();
     }
 
-    fn update(&self, arm: A, reward: f32) {
+    fn update(&mut self, arm: A, reward: f64) {
+        let n_ = self.counts.entry(arm.clone()).or_insert(0);
+        *n_ += 1;
+        let n = *n_ as f64;
+
+        let val = self.values.entry(arm).or_insert(0.0);
+        *val = ((n - 1.0) / n) * *val + (1.0 / n) * reward
     }
 }
