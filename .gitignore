@@ -12,3 +12,6 @@ Cargo.lock
 /target/
 **/*.rs.bk
 Cargo.lock
+
+tmp_bandit.json
+tmp_bandit_err.json
