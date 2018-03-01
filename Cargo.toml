@@ -2,6 +2,9 @@
 name = "bandit"
 version = "0.9.0"
 authors = ["Michael Bohn <michael.bohn@freiheit.com>"]
+description = "Bandit Algorithms in Rust"
+license = "GPL-3.0"
+repository = "https://github.com/Ragnaroek/bandit"
 
 [dependencies]
 rand = "0.4.1"
