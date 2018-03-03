@@ -2,7 +2,7 @@ extern crate rand;
 extern crate serde;
 extern crate serde_json;
 
-use super::bandit::{MultiArmedBandit, Identifiable};
+use super::bandit::{MultiArmedBandit, Identifiable, BanditConfig};
 use std::collections::{HashMap};
 use std::hash::{Hash};
 use std::cmp::{Eq};
@@ -19,6 +19,7 @@ const E : f64 = 2.71828_18284_59045_23536;
 #[derive(Debug, PartialEq)]
 pub struct AnnealingSoftmax<A: Hash + Eq + Identifiable> {
     config: AnnealingSoftmaxConfig,
+    bandit_config: BanditConfig,
     pub arms: Vec<A>,
     counts: HashMap<A, u64>,
     values: HashMap<A, f64>
@@ -32,23 +33,23 @@ pub struct AnnealingSoftmaxConfig {
 }
 
 impl<A: Clone + Hash + Eq + Identifiable> AnnealingSoftmax<A> {
-    pub fn new(arms: Vec<A>, config: AnnealingSoftmaxConfig) -> AnnealingSoftmax<A> {
+    pub fn new(arms: Vec<A>, bandit_config: BanditConfig, config: AnnealingSoftmaxConfig) -> AnnealingSoftmax<A> {
         let mut values = HashMap::new();
         for i in 0..arms.len() {
             values.insert(arms[i].clone(), 0.0);
         }
-        return AnnealingSoftmax::new_with_values(arms, config, values);
+        AnnealingSoftmax::new_with_values(arms, bandit_config, config, values)
     }
 
-    pub fn new_with_values(arms: Vec<A>, config: AnnealingSoftmaxConfig, values: HashMap<A, f64>) -> AnnealingSoftmax<A> {
+    pub fn new_with_values(arms: Vec<A>, bandit_config: BanditConfig, config: AnnealingSoftmaxConfig, values: HashMap<A, f64>) -> AnnealingSoftmax<A> {
         let mut counts = HashMap::new();
         for i in 0..arms.len() {
             counts.insert(arms[i].clone(), 0);
         }
-        return AnnealingSoftmax{config, arms, counts, values};
+        AnnealingSoftmax{config, bandit_config, arms, counts, values}
     }
 
-    pub fn load_bandit(arms: Vec<A>, path : &Path) -> io::Result<AnnealingSoftmax<A>> {
+    pub fn load_bandit(arms: Vec<A>, bandit_config: BanditConfig, path : &Path) -> io::Result<AnnealingSoftmax<A>> {
 
         let mut file = File::open(path)?;
         let mut content = String::new();
@@ -67,7 +68,7 @@ impl<A: Clone + Hash + Eq + Identifiable> AnnealingSoftmax<A> {
             values.insert(arm.clone(), val);
         }
 
-        Ok(AnnealingSoftmax{config: deser.config, arms: arms, counts: counts, values: values})
+        Ok(AnnealingSoftmax{config: deser.config, bandit_config: bandit_config, arms: arms, counts: counts, values: values})
     }
 }
 

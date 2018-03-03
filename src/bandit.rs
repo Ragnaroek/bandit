@@ -1,9 +1,19 @@
 
 extern crate serde;
 
-use std::path::{Path};
+use std::path::{PathBuf, Path};
 use std::hash::{Hash};
 use std::io;
+
+#[derive(Debug, PartialEq, Clone)]
+pub struct BanditConfig {
+    /// Log file for logging details about the bandit algorithm
+    /// run. What will be logged depends on the bandit algorithm
+    /// implementation.
+    log_file: Option<PathBuf>
+}
+
+pub static DEFAULT_BANDIT_CONFIG : BanditConfig = BanditConfig{log_file: Option::None};
 
 pub trait MultiArmedBandit<A: Hash + Clone + Identifiable> {
     fn select_arm(&self) -> A;
