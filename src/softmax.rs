@@ -75,6 +75,10 @@ impl<A: Clone + Hash + Eq + Identifiable> AnnealingSoftmax<A> {
     fn log_update(&self, arm: &A, value : f64) {
         log(format!("{};{}", log_command("UPDATE", arm), value), &self.bandit_config.log_file);
     }
+
+    fn log_select(&self, arm: &A) {
+        log(log_command("SELECT", arm), &self.bandit_config.log_file);
+    }
 }
 
 impl<A: Clone + Hash + Eq + Identifiable> MultiArmedBandit<A> for AnnealingSoftmax<A> {
@@ -119,10 +123,14 @@ impl<A: Clone + Hash + Eq + Identifiable> MultiArmedBandit<A> for AnnealingSoftm
             }
             cum_prob += prob;
             if cum_prob > rnd {
+                self.log_select(&arm);
                 return arm.clone();
             }
         }
-        return self.arms[self.arms.len()-1].clone();
+
+        let fallback_arm = self.arms[self.arms.len()-1].clone();
+        self.log_select(&fallback_arm);
+        return fallback_arm;
     }
 
     fn update(&mut self, arm: A, reward: f64) {

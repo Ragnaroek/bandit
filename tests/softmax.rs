@@ -144,13 +144,13 @@ fn test_save_and_load_bandit_with_missing_arm() {
 #[test]
 fn test_logging_update() {
 
-    let test_file = Path::new("./tmp_log.csv");
+    let test_file = Path::new(LOG_UPDATE_FILE);
     if test_file.exists() {
         remove_file(test_file).unwrap();
     }
 
     let arms = vec![TestArm{num: 0}, TestArm{num: 1}, TestArm{num: 2}, TestArm{num: 3}];
-    let bandit_config = BanditConfig{log_file: Some(PathBuf::from("./tmp_log.csv"))};
+    let bandit_config = BanditConfig{log_file: Some(PathBuf::from(LOG_UPDATE_FILE))};
     let mut sm = AnnealingSoftmax::new(arms.clone(), bandit_config, AnnealingSoftmaxConfig{cooldown_factor: 1.0});
 
     sm.update(arms[0], 10.0);
@@ -158,10 +158,7 @@ fn test_logging_update() {
     sm.update(arms[2], 30.0);
     sm.update(arms[3], 40.0);
 
-    println!("opening test log");
-    let mut file = File::open(Path::new("./tmp_log.csv")).unwrap();
-    let mut log_content = String::new();
-    file.read_to_string(&mut log_content).unwrap();
+    let log_content = read_file_content(LOG_UPDATE_FILE);
 
     let re = Regex::new(
 r#"^UPDATE;arm:0;\d{13};10
@@ -169,10 +166,48 @@ UPDATE;arm:1;\d{13};20
 UPDATE;arm:2;\d{13};30
 UPDATE;arm:3;\d{13};40
 $"#).expect("compiled regex");
+
+    assert!(re.is_match(&log_content), format!("log file did not match expected, was {}", &log_content));
+}
+
+#[test]
+fn test_logging_select() {
+
+    let test_file = Path::new(LOG_SELECT_FILE);
+    if test_file.exists() {
+        remove_file(test_file).unwrap();
+    }
+
+    let arms = vec![TestArm{num: 0}, TestArm{num: 1}, TestArm{num: 2}, TestArm{num: 3}];
+    let bandit_config = BanditConfig{log_file: Some(PathBuf::from(LOG_SELECT_FILE))};
+    let sm = AnnealingSoftmax::new(arms.clone(), bandit_config, AnnealingSoftmaxConfig{cooldown_factor: 1.0});
+
+    let select1 = sm.select_arm();
+    let select2 = sm.select_arm();
+    let select3 = sm.select_arm();
+
+    let log_content = read_file_content(LOG_SELECT_FILE);
+
+    let re = Regex::new(&format!(
+r#"^SELECT;{};\d{{13}}
+SELECT;{};\d{{13}}
+SELECT;{};\d{{13}}
+$"#, select1.ident(), select2.ident(), select3.ident())).expect("compiled regex");
+
     assert!(re.is_match(&log_content), format!("log file did not match expected, was {}", &log_content));
 }
 
 //Helper
+
+static LOG_UPDATE_FILE : &str = "./tmp_log_update.csv";
+static LOG_SELECT_FILE : &str = "./tmp_log_select.csv";
+
+fn read_file_content(path : &str) -> String {
+    let mut file = File::open(Path::new(path)).unwrap();
+    let mut log_content = String::new();
+    file.read_to_string(&mut log_content).unwrap();
+    return log_content;
+}
 
 fn abs_select(prop: f64) -> u32 {
     return (NUM_SELECTS as f64 * prop) as u32;

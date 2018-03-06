@@ -15,4 +15,5 @@ Cargo.lock
 
 tmp_bandit.json
 tmp_bandit_err.json
-tmp_log.csv
+tmp_log_update.csv
+tmp_log_select.csv
