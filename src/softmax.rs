@@ -36,16 +36,16 @@ pub struct AnnealingSoftmaxConfig {
 impl<A: Clone + Hash + Eq + Identifiable> AnnealingSoftmax<A> {
     pub fn new(arms: Vec<A>, bandit_config: BanditConfig, config: AnnealingSoftmaxConfig) -> AnnealingSoftmax<A> {
         let mut values = HashMap::new();
-        for i in 0..arms.len() {
-            values.insert(arms[i].clone(), 0.0);
+        for arm in &arms {
+            values.insert(arm.clone(), 0.0);
         }
         AnnealingSoftmax::new_with_values(arms, bandit_config, config, values)
     }
 
     pub fn new_with_values(arms: Vec<A>, bandit_config: BanditConfig, config: AnnealingSoftmaxConfig, values: HashMap<A, f64>) -> AnnealingSoftmax<A> {
         let mut counts = HashMap::new();
-        for i in 0..arms.len() {
-            counts.insert(arms[i].clone(), 0);
+        for arm in &arms {
+            counts.insert(arm.clone(), 0);
         }
         AnnealingSoftmax{config, bandit_config, arms, counts, values}
     }
@@ -69,15 +69,15 @@ impl<A: Clone + Hash + Eq + Identifiable> AnnealingSoftmax<A> {
             values.insert(arm.clone(), val);
         }
 
-        Ok(AnnealingSoftmax{config: deser.config, bandit_config: bandit_config, arms: arms, counts: counts, values: values})
+        Ok(AnnealingSoftmax{config: deser.config, bandit_config, arms, counts, values})
     }
 
     fn log_update(&self, arm: &A, value : f64) {
-        log(format!("{};{}", log_command("UPDATE", arm), value), &self.bandit_config.log_file);
+        log(&format!("{};{}", &log_command("UPDATE", arm), value), &self.bandit_config.log_file);
     }
 
     fn log_select(&self, arm: &A) {
-        log(log_command("SELECT", arm), &self.bandit_config.log_file);
+        log(&log_command("SELECT", arm), &self.bandit_config.log_file);
     }
 }
 
@@ -100,7 +100,7 @@ impl<A: Clone + Hash + Eq + Identifiable> MultiArmedBandit<A> for AnnealingSoftm
         if z.is_infinite() {
             let mut highest_reward_arm : Option<&A> = None;
             let mut highest_value = std::f64::MIN;
-            for (arm, v) in self.values.iter() {
+            for (arm, v) in &self.values {
                 if *v > highest_value {
                     highest_value = *v;
                     highest_reward_arm = Some(arm);
@@ -115,7 +115,7 @@ impl<A: Clone + Hash + Eq + Identifiable> MultiArmedBandit<A> for AnnealingSoftm
 
         let rnd : f64 = rand::random();
         let mut cum_prob : f64 = 0.0;
-        for (arm, v) in self.values.iter() {
+        for (arm, v) in &self.values {
             let mut prob = (cool_down.powf(v / temperature)) / z;
 
             if prob.is_nan() {
@@ -123,14 +123,14 @@ impl<A: Clone + Hash + Eq + Identifiable> MultiArmedBandit<A> for AnnealingSoftm
             }
             cum_prob += prob;
             if cum_prob > rnd {
-                self.log_select(&arm);
+                self.log_select(arm);
                 return arm.clone();
             }
         }
 
         let fallback_arm = self.arms[self.arms.len()-1].clone();
         self.log_select(&fallback_arm);
-        return fallback_arm;
+        fallback_arm
     }
 
     fn update(&mut self, arm: A, reward: f64) {
@@ -163,10 +163,10 @@ impl<A: Clone + Hash + Eq + Identifiable> MultiArmedBandit<A> for AnnealingSoftm
         };
 
         let external_format = ExternalFormat {
-            config: self.config.clone(),
-            arms: arms,
-            counts: counts,
-            values: values,
+            config: self.config,
+            arms,
+            counts,
+            values,
         };
         let ser = serde_json::to_string(&external_format)?;
 
@@ -176,7 +176,7 @@ impl<A: Clone + Hash + Eq + Identifiable> MultiArmedBandit<A> for AnnealingSoftm
     }
 }
 
-fn  log_command<A: Identifiable>(cmd: &str, arm: &A) -> String {
+fn log_command<A: Identifiable>(cmd: &str, arm: &A) -> String {
     format!("{};{};{}", cmd, arm.ident(), timestamp())
 }
 
@@ -186,7 +186,7 @@ fn timestamp() -> u64  {
     timestamp.as_secs() * 1_000 + u64::from(timestamp.subsec_nanos() / 1_000_000)
 }
 
-fn log(line : String, path : &Option<PathBuf>) {
+fn log(line : &str, path : &Option<PathBuf>) {
     if path.is_none() {
         return;
     }

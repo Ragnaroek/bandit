@@ -138,7 +138,7 @@ fn test_save_and_load_bandit_with_missing_arm() {
 
     let arms_last_one_missing = vec![TestArm{num: 0}, TestArm{num: 1}, TestArm{num: 2}];
     let load_result = AnnealingSoftmax::load_bandit(arms_last_one_missing, DEFAULT_BANDIT_CONFIG.clone(), Path::new("./tmp_bandit.json"));
-    assert!(load_result.is_err(), "load should fail, since TestArm{num: 3} could not be found");
+    assert!(load_result.is_err(), "load should fail, since TestArm{{num: 3}} could not be found, but was {:?}", load_result);
 }
 
 #[test]
@@ -206,11 +206,11 @@ fn read_file_content(path : &str) -> String {
     let mut file = File::open(Path::new(path)).unwrap();
     let mut log_content = String::new();
     file.read_to_string(&mut log_content).unwrap();
-    return log_content;
+    log_content
 }
 
 fn abs_select(prop: f64) -> u32 {
-    return (NUM_SELECTS as f64 * prop) as u32;
+    (f64::from(NUM_SELECTS) * prop) as u32
 }
 
 fn assert_prop(expected_count: u32, v: u32, arm: TestArm) {
