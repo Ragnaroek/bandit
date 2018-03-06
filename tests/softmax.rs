@@ -1,9 +1,13 @@
 extern crate bandit;
+extern crate regex;
 
-use bandit::bandit::{MultiArmedBandit, Identifiable, DEFAULT_BANDIT_CONFIG};
+use bandit::bandit::{MultiArmedBandit, Identifiable, BanditConfig, DEFAULT_BANDIT_CONFIG};
 use bandit::softmax::{AnnealingSoftmax, AnnealingSoftmaxConfig, DEFAULT_CONFIG};
 use std::collections::{HashMap};
-use std::path::{Path};
+use std::path::{Path, PathBuf};
+use std::fs::{File, remove_file};
+use std::io::{Read};
+use regex::{Regex};
 
 const NUM_SELECTS : u32 = 100_000;
 const EPSILON : u32 = (NUM_SELECTS as f64 * 0.005) as u32;
@@ -135,6 +139,37 @@ fn test_save_and_load_bandit_with_missing_arm() {
     let arms_last_one_missing = vec![TestArm{num: 0}, TestArm{num: 1}, TestArm{num: 2}];
     let load_result = AnnealingSoftmax::load_bandit(arms_last_one_missing, DEFAULT_BANDIT_CONFIG.clone(), Path::new("./tmp_bandit.json"));
     assert!(load_result.is_err(), "load should fail, since TestArm{num: 3} could not be found");
+}
+
+#[test]
+fn test_logging_update() {
+
+    let test_file = Path::new("./tmp_log.csv");
+    if test_file.exists() {
+        remove_file(test_file).unwrap();
+    }
+
+    let arms = vec![TestArm{num: 0}, TestArm{num: 1}, TestArm{num: 2}, TestArm{num: 3}];
+    let bandit_config = BanditConfig{log_file: Some(PathBuf::from("./tmp_log.csv"))};
+    let mut sm = AnnealingSoftmax::new(arms.clone(), bandit_config, AnnealingSoftmaxConfig{cooldown_factor: 1.0});
+
+    sm.update(arms[0], 10.0);
+    sm.update(arms[1], 20.0);
+    sm.update(arms[2], 30.0);
+    sm.update(arms[3], 40.0);
+
+    println!("opening test log");
+    let mut file = File::open(Path::new("./tmp_log.csv")).unwrap();
+    let mut log_content = String::new();
+    file.read_to_string(&mut log_content).unwrap();
+
+    let re = Regex::new(
+r#"^UPDATE;arm:0;\d{13};10
+UPDATE;arm:1;\d{13};20
+UPDATE;arm:2;\d{13};30
+UPDATE;arm:3;\d{13};40
+$"#).expect("compiled regex");
+    assert!(re.is_match(&log_content), format!("log file did not match expected, was {}", &log_content));
 }
 
 //Helper

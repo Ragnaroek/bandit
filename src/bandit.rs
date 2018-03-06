@@ -10,7 +10,7 @@ pub struct BanditConfig {
     /// Log file for logging details about the bandit algorithm
     /// run. What will be logged depends on the bandit algorithm
     /// implementation.
-    log_file: Option<PathBuf>
+    pub log_file: Option<PathBuf>
 }
 
 pub static DEFAULT_BANDIT_CONFIG : BanditConfig = BanditConfig{log_file: Option::None};

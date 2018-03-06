@@ -6,10 +6,11 @@ use super::bandit::{MultiArmedBandit, Identifiable, BanditConfig};
 use std::collections::{HashMap};
 use std::hash::{Hash};
 use std::cmp::{Eq};
-use std::path::{Path};
+use std::path::{Path, PathBuf};
 use std::io::{Error, ErrorKind, Write, Read};
 use std::io;
-use std::fs::{File};
+use std::time;
+use std::fs::{File, OpenOptions};
 use std;
 
 pub static DEFAULT_CONFIG : AnnealingSoftmaxConfig =  AnnealingSoftmaxConfig{cooldown_factor: 0.5};
@@ -70,6 +71,10 @@ impl<A: Clone + Hash + Eq + Identifiable> AnnealingSoftmax<A> {
 
         Ok(AnnealingSoftmax{config: deser.config, bandit_config: bandit_config, arms: arms, counts: counts, values: values})
     }
+
+    fn log_update(&self, arm: &A, value : f64) {
+        log(format!("{};{}", log_command("UPDATE", arm), value), &self.bandit_config.log_file);
+    }
 }
 
 impl<A: Clone + Hash + Eq + Identifiable> MultiArmedBandit<A> for AnnealingSoftmax<A> {
@@ -121,13 +126,17 @@ impl<A: Clone + Hash + Eq + Identifiable> MultiArmedBandit<A> for AnnealingSoftm
     }
 
     fn update(&mut self, arm: A, reward: f64) {
-        let n_ = self.counts.entry(arm.clone()).or_insert(0);
-        *n_ += 1;
-        let n = *n_ as f64;
+        let val_norm;
+        {
+            let n_ = self.counts.entry(arm.clone()).or_insert(0);
+            *n_ += 1;
+            let n = *n_ as f64;
 
-        let val = self.values.entry(arm).or_insert(0.0);
-        *val = ((n - 1.0) / n) * *val + (1.0 / n) * reward
-
+            let val = self.values.entry(arm.clone()).or_insert(0.0);
+            *val = ((n - 1.0) / n) * *val + (1.0 / n) * reward;
+            val_norm = *val;
+        }
+        self.log_update(&arm, val_norm);
     }
 
     fn save_bandit(&self, path: &Path) -> io::Result<()> {
@@ -156,6 +165,35 @@ impl<A: Clone + Hash + Eq + Identifiable> MultiArmedBandit<A> for AnnealingSoftm
         let mut file = File::create(path)?;
         file.write_all(&ser.into_bytes())?;
         file.flush()
+    }
+}
+
+fn  log_command<A: Identifiable>(cmd: &str, arm: &A) -> String {
+    format!("{};{};{}", cmd, arm.ident(), timestamp())
+}
+
+fn timestamp() -> u64  {
+    let timestamp_result = time::SystemTime::now().duration_since(time::UNIX_EPOCH);
+    let timestamp = timestamp_result.expect("system time");
+    timestamp.as_secs() * 1_000 + u64::from(timestamp.subsec_nanos() / 1_000_000)
+}
+
+fn log(line : String, path : &Option<PathBuf>) {
+    if path.is_none() {
+        return;
+    }
+
+    let file = OpenOptions::new()
+            .append(true)
+            .create(true)
+            .open(path.as_ref().unwrap());
+    if file.is_ok() {
+        let write_result = writeln!(file.unwrap(), "{}", line);
+        if write_result.is_err() {
+            println!("writing log failed {}", line);
+        }
+    } else {
+        println!("logging failed: {}", line);
     }
 }
 
