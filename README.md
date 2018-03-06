@@ -6,7 +6,7 @@
 
 ```toml
 [dependencies]
-bandit = "0.9"
+bandit = "0.10.0"
 ```
 
 currently provides a softmax implementation
