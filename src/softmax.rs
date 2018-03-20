@@ -2,7 +2,7 @@ extern crate rand;
 extern crate serde;
 extern crate serde_json;
 
-use super::bandit::{MultiArmedBandit, Identifiable, BanditConfig};
+use super::{MultiArmedBandit, Identifiable, BanditConfig};
 use std::collections::{HashMap};
 use std::hash::{Hash};
 use std::cmp::{Eq};

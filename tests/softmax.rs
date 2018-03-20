@@ -1,7 +1,7 @@
 extern crate bandit;
 extern crate regex;
 
-use bandit::bandit::{MultiArmedBandit, Identifiable, BanditConfig, DEFAULT_BANDIT_CONFIG};
+use bandit::{MultiArmedBandit, Identifiable, BanditConfig, DEFAULT_BANDIT_CONFIG};
 use bandit::softmax::{AnnealingSoftmax, AnnealingSoftmaxConfig, DEFAULT_CONFIG};
 use std::collections::{HashMap};
 use std::path::{Path, PathBuf};
