@@ -123,4 +123,5 @@ saving the bandit again. If a new arm is added, it will start with a zero reward
 TODO Include teaser picture here.
 
 The bandit tools application allows you to analyse the stored state file and log file.
-Details are described in the separate repo: TODO Link to bandit_tool repo
+Details are described in the separate repo [bandit_tool](https://github.com/Ragnaroek/bandit-tools).
+You can find the web application here: https://ragnaroek.github.io/bandit-tools/.
