@@ -123,7 +123,7 @@ saving the bandit again. If a new arm is added, it will start with a zero reward
 
 ## Visualising Bandit Arm Selection Data
 
-TODO Include teaser picture here.
+![](https://thumb.ibb.co/eA5Pzo/teaser_img.png)
 
 The bandit tools application allows you to analyse the stored state file and log file.
 Details are described in the separate repo [bandit_tool](https://github.com/Ragnaroek/bandit-tools).
