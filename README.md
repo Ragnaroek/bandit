@@ -20,7 +20,7 @@ Future work may also implement other bandit algorithm variants (pull-requests ar
 
 First, you need to create a bandit with three parameters:
 
-```
+```rust
 let bandit = AnnealingSoftmax::new(arms, DEFAULT_BANDIT_CONFIG.clone(), DEFAULT_CONFIG);
 ```
 
@@ -28,7 +28,7 @@ The first parameters is the list of arms the bandit will draw from. An arm can b
 that implements the `Clone + Hash + Eq + Identifiable` traits. You probably always will
 derive the first three traits, but the last one, `Identifiable`, is special.
 
-```
+```rust
 pub trait Identifiable {
     fn ident(&self) -> String;
 }
@@ -41,7 +41,7 @@ Rust version, we require the trait returning a unique and easily serialisable `S
 for the arm.
 
 The next parameter is the general bandit configuration:
-```
+```rust
 #[derive(Debug, PartialEq, Clone)]
 pub struct BanditConfig {
     /// Log file for logging details about the bandit algorithm
@@ -53,7 +53,7 @@ pub struct BanditConfig {
 
 Allowing you to optionally supply a path to a log file, where every step in the algorithm is logged to.
 The log file is a simple csv file, logging arm draw states and updates to the rewards:
-```
+```csv
 SELECT;threads:5;1529824600935
 SELECT;threads:18;1529825031483
 UPDATE;threads:18;1529825931520;0.1320011111111111
@@ -67,7 +67,7 @@ UPDATE;threads:7;1529828631384;0.12791666666666668
 ```
 
 The last parameter is a special configuration for the annealing softmax algorithm:
-```
+```rust
 #[derive(Debug, PartialEq, Copy, Clone, Serialize, Deserialize)]
 pub struct AnnealingSoftmaxConfig {
     /// The higher the value the faster the algorithms tends toward selecting
@@ -83,12 +83,12 @@ stick with the arm with the highest reward discovered so far. You probably have 
 with this factor to find the best one for your particular setup (there are also tools to help you with that, see below).
 
 After constructing and configuring your bandit, you can start selecting arms:
-```
+```rust
 let arm = bandit.select_arm();
 ```
 
 and update the reward for arms:
-```
+```rust
 let reward = ... some f64 value
 bandit.update(arm, reward);
 ```
@@ -102,13 +102,13 @@ errors and inconsistent bandit states (this was found out the hard way in a unit
 
 A bandit can save itself into a file:
 
-```
+```rust
 bandit.save_bandit(<path to save file>);
 ```
 
 The bandit can be loaded again from the particular implementation:
 
-```
+```rust
 let arms = ... list of arms, as in the initial creation
 let bandit_config = ... BanditConfig, like in second parameter from initial creation
 let bandit_loaded = AnnealingSoftmax::load_bandit(arms, bandit_config, <path to save file>);
