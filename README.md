@@ -16,6 +16,9 @@ bandit = "0.12.0"
 This library currently only implements the annealing softmax bandit algorithm.
 Future work may also implement other bandit algorithm variants (pull-requests are welcomed).
 
+Many inspirations for this project are taken from the book 
+*Bandit Algorithms for Website Optimization* by John Myles White. Copyright 2013 John Myles White, 978-1-449-34133-6
+
 ## Usage and Configuration
 
 First, you need to create a bandit with three parameters:
