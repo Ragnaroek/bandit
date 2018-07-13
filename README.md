@@ -4,6 +4,8 @@
 
 # Multi-armed bandit algorithms in Rust
 
+![Bandit](https://media.giphy.com/media/l0HlHp2aBxnKirj3O/giphy.gif)
+
 ## Cargo
 
 ```toml
