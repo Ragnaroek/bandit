@@ -11,7 +11,7 @@
 
 ```toml
 [dependencies]
-bandit = "0.12.0"
+bandit = "0.12.1"
 ```
 
 ## Description and Scope
