@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/Ragnaroek/bandit.svg?branch=master)](https://travis-ci.org/Ragnaroek/bandit)
+[![codecov](https://codecov.io/gh/Ragnaroek/bandit/branch/master/graph/badge.svg)](https://codecov.io/gh/Ragnaroek/bandit)
 [![License](https://img.shields.io/badge/license-GPLv3-blue.svg)](https://github.com/Ragnaroek/bandit/blob/master/LICENSE)
 [![](http://meritbadge.herokuapp.com/bandit)](https://crates.io/crates/bandit)
 
