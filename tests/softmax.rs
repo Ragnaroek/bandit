@@ -51,7 +51,7 @@ fn test_moves_towards_arm_with_highest_reward_with_high_cooldown() {
         selects.push(draws);
     }
 
-    assert!(selects[num_iterations-1][1] >= 996, format!("last round should favour highest reward, but did not {}", selects[num_iterations-1][1]));
+    assert!(selects[num_iterations-1][1] >= 996, "last round should favour highest reward, but did not {}", selects[num_iterations-1][1]);
 }
 
 #[test]
@@ -167,7 +167,7 @@ UPDATE;arm:2;\d{13};30
 UPDATE;arm:3;\d{13};40
 $"#).expect("compiled regex");
 
-    assert!(re.is_match(&log_content), format!("log file did not match expected, was {}", &log_content));
+    assert!(re.is_match(&log_content), "log file did not match expected, was {}", &log_content);
 }
 
 #[test]
@@ -194,7 +194,7 @@ SELECT;{};\d{{13}}
 SELECT;{};\d{{13}}
 $"#, select1.ident(), select2.ident(), select3.ident())).expect("compiled regex");
 
-    assert!(re.is_match(&log_content), format!("log file did not match expected, was {}", &log_content));
+    assert!(re.is_match(&log_content), "log file did not match expected, was {}", &log_content);
 }
 
 //Helper

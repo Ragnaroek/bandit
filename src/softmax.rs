@@ -15,6 +15,7 @@ use std;
 
 pub static DEFAULT_CONFIG : AnnealingSoftmaxConfig =  AnnealingSoftmaxConfig{cooldown_factor: 0.5};
 
+#[allow(clippy::excessive_precision)]
 const E : f64 = 2.71828_18284_59045_23536;
 
 #[derive(Debug, PartialEq)]
@@ -183,7 +184,7 @@ fn log_command<A: Identifiable>(cmd: &str, arm: &A) -> String {
 fn timestamp() -> u64  {
     let timestamp_result = time::SystemTime::now().duration_since(time::UNIX_EPOCH);
     let timestamp = timestamp_result.expect("system time");
-    timestamp.as_secs() * 1_000 + u64::from(timestamp.subsec_nanos() / 1_000_000)
+    timestamp.as_secs() * 1_000 + u64::from(timestamp.subsec_millis())
 }
 
 fn log(line : &str, path : &Option<PathBuf>) {
