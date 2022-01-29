@@ -107,8 +107,8 @@ impl<A: Clone + Hash + Eq + Identifiable> MultiArmedBandit<A> for AnnealingSoftm
                     highest_reward_arm = Some(arm);
                 }
             }
-            if highest_reward_arm.is_some() {
-                return highest_reward_arm.expect("highest reward arm").clone();
+            if let Some(arm) = highest_reward_arm {
+                return arm.clone();
             } else {
                 return self.arms[self.arms.len()-1].clone();
             }
