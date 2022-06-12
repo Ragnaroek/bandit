@@ -4,6 +4,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [0.12.4]
+- updated dependencies
+
 ## [0.12.3]
 - fixed warning (compiler|clippy)
 - dependency update
