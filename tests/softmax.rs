@@ -1,6 +1,8 @@
 extern crate bandit;
 extern crate regex;
 
+mod common;
+
 use bandit::{MultiArmedBandit, Identifiable, BanditConfig, DEFAULT_BANDIT_CONFIG};
 use bandit::softmax::{AnnealingSoftmax, AnnealingSoftmaxConfig, DEFAULT_CONFIG};
 use std::collections::{HashMap};
@@ -9,7 +11,8 @@ use std::fs::{File, remove_file};
 use std::io::{Read};
 use regex::{Regex};
 
-const NUM_SELECTS : u32 = 100_000;
+use common::{TestArm, NUM_SELECTS};
+
 const EPSILON : u32 = (NUM_SELECTS as f64 * 0.005) as u32;
 
 #[test]
@@ -23,9 +26,9 @@ pub fn test_select_arm() {
         *selects.entry(arm_selected).or_insert(0) += 1;
     }
 
-    let expected_count = abs_select(0.25);
+    let expected_count = common::abs_select(0.25);
     for (arm, v) in selects {
-        assert_prop(expected_count, v, arm);
+        common::assert_prop(expected_count, v, arm);
     }
 }
 
@@ -144,13 +147,13 @@ fn test_save_and_load_bandit_with_missing_arm() {
 #[test]
 fn test_logging_update() {
 
-    let test_file = Path::new(LOG_UPDATE_FILE);
+    let test_file = Path::new(common::LOG_UPDATE_FILE);
     if test_file.exists() {
         remove_file(test_file).unwrap();
     }
 
     let arms = vec![TestArm{num: 0}, TestArm{num: 1}, TestArm{num: 2}, TestArm{num: 3}];
-    let bandit_config = BanditConfig{log_file: Some(PathBuf::from(LOG_UPDATE_FILE))};
+    let bandit_config = BanditConfig{log_file: Some(PathBuf::from(common::LOG_UPDATE_FILE))};
     let mut sm = AnnealingSoftmax::new(arms.clone(), bandit_config, AnnealingSoftmaxConfig{cooldown_factor: 1.0});
 
     sm.update(arms[0], 10.0);
@@ -158,7 +161,7 @@ fn test_logging_update() {
     sm.update(arms[2], 30.0);
     sm.update(arms[3], 40.0);
 
-    let log_content = read_file_content(LOG_UPDATE_FILE);
+    let log_content = common::read_file_content(common::LOG_UPDATE_FILE);
 
     let re = Regex::new(
 r#"^UPDATE;arm:0;\d{13};10
@@ -173,20 +176,20 @@ $"#).expect("compiled regex");
 #[test]
 fn test_logging_select() {
 
-    let test_file = Path::new(LOG_SELECT_FILE);
+    let test_file = Path::new(common::LOG_SELECT_FILE);
     if test_file.exists() {
         remove_file(test_file).unwrap();
     }
 
     let arms = vec![TestArm{num: 0}, TestArm{num: 1}, TestArm{num: 2}, TestArm{num: 3}];
-    let bandit_config = BanditConfig{log_file: Some(PathBuf::from(LOG_SELECT_FILE))};
+    let bandit_config = BanditConfig{log_file: Some(PathBuf::from(common::LOG_SELECT_FILE))};
     let sm = AnnealingSoftmax::new(arms.clone(), bandit_config, AnnealingSoftmaxConfig{cooldown_factor: 1.0});
 
     let select1 = sm.select_arm();
     let select2 = sm.select_arm();
     let select3 = sm.select_arm();
 
-    let log_content = read_file_content(LOG_SELECT_FILE);
+    let log_content = common::read_file_content(common::LOG_SELECT_FILE);
 
     let re = Regex::new(&format!(
 r#"^SELECT;{};\d{{13}}
@@ -195,35 +198,4 @@ SELECT;{};\d{{13}}
 $"#, select1.ident(), select2.ident(), select3.ident())).expect("compiled regex");
 
     assert!(re.is_match(&log_content), "log file did not match expected, was {}", &log_content);
-}
-
-//Helper
-
-static LOG_UPDATE_FILE : &str = "./tmp_log_update.csv";
-static LOG_SELECT_FILE : &str = "./tmp_log_select.csv";
-
-fn read_file_content(path : &str) -> String {
-    let mut file = File::open(Path::new(path)).unwrap();
-    let mut log_content = String::new();
-    file.read_to_string(&mut log_content).unwrap();
-    log_content
-}
-
-fn abs_select(prop: f64) -> u32 {
-    (f64::from(NUM_SELECTS) * prop) as u32
-}
-
-fn assert_prop(expected_count: u32, v: u32, arm: TestArm) {
-    assert!(expected_count - EPSILON < v && v < expected_count + EPSILON, "expected {}+-{}, got {} arm {:?}", expected_count, EPSILON, v, arm);
-}
-
-#[derive(Hash, PartialEq, Eq, Clone, Copy, Debug)]
-struct TestArm {
-    num: u32
-}
-
-impl Identifiable for TestArm {
-    fn ident(&self) -> String {
-        format!("arm:{}", self.num)
-    }
 }
