@@ -79,4 +79,10 @@ mod test {
         let values = [0.56, 0.73, 1.67, 0.57];
         assert_eq!(select_argmax(&values), Some(2))
     }
+
+    #[test]
+    fn select_none_works() {
+        let values = [];
+        assert_eq!(select_argmax(&values),  None)
+    }
 }
