@@ -10,6 +10,8 @@ use std::hash::{Hash};
 use std::io;
 
 pub mod softmax;
+pub mod ucb;
+mod utils;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct BanditConfig {
@@ -24,6 +26,10 @@ pub static DEFAULT_BANDIT_CONFIG : BanditConfig = BanditConfig{log_file: Option:
 pub trait MultiArmedBandit<A: Hash + Clone + Identifiable> {
     fn select_arm(&self) -> A;
     fn update(&mut self, arm: A, reward: f64);
+    /// additional function to update counts of selected arm in multi-threaded applications
+    fn update_counts(&mut self, arm: &A);
+    /// additional function to update rewards of selected arm in multi-threaded applications
+    fn update_rewards(&mut self, arm: &A, reward: f64);
 
     /// stores the current state of the bandit algorithm in
     /// the supplied file. Every implementation has a corresponding
