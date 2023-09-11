@@ -3,6 +3,7 @@ extern crate serde;
 extern crate serde_json;
 
 use super::{MultiArmedBandit, Identifiable, BanditConfig};
+use super::utils::{find_arm, log, log_command};
 use std::collections::{HashMap};
 use std::hash::{Hash};
 use std::cmp::{Eq};
@@ -83,7 +84,6 @@ impl<A: Clone + Hash + Eq + Identifiable> AnnealingSoftmax<A> {
 }
 
 impl<A: Clone + Hash + Eq + Identifiable> MultiArmedBandit<A> for AnnealingSoftmax<A> {
-
     fn select_arm(&self) -> A {
 
         let mut t : u64 = 1;
@@ -148,6 +148,25 @@ impl<A: Clone + Hash + Eq + Identifiable> MultiArmedBandit<A> for AnnealingSoftm
         self.log_update(&arm, val_norm);
     }
 
+    fn update_counts(&mut self, arm: &A) {
+        {
+            let n_ = self.counts.entry(arm.clone()).or_insert(0);
+            *n_ += 1;
+        }
+        log_command("update counts", arm);
+    }
+
+    fn update_rewards(&mut self, arm: &A, reward: f64) {
+        let val_norm;
+        {
+            let n = self.counts.get(arm).copied().unwrap_or_default() as f64;
+            let val = self.values.entry(arm.clone()).or_insert(0.0);
+            *val = ((n - 1.0) / n) * *val + (1.0 / n) * reward;
+            val_norm = *val;
+        }
+        self.log_update(arm, val_norm);
+    }
+
     fn save_bandit(&self, path: &Path) -> io::Result<()> {
 
         let mut counts = HashMap::new();
@@ -175,44 +194,6 @@ impl<A: Clone + Hash + Eq + Identifiable> MultiArmedBandit<A> for AnnealingSoftm
         file.write_all(&ser.into_bytes())?;
         file.flush()
     }
-}
-
-fn log_command<A: Identifiable>(cmd: &str, arm: &A) -> String {
-    format!("{};{};{}", cmd, arm.ident(), timestamp())
-}
-
-fn timestamp() -> u64  {
-    let timestamp_result = time::SystemTime::now().duration_since(time::UNIX_EPOCH);
-    let timestamp = timestamp_result.expect("system time");
-    timestamp.as_secs() * 1_000 + u64::from(timestamp.subsec_millis())
-}
-
-fn log(line : &str, path : &Option<PathBuf>) {
-    if path.is_none() {
-        return;
-    }
-
-    let file = OpenOptions::new()
-            .append(true)
-            .create(true)
-            .open(path.as_ref().unwrap());
-    if file.is_ok() {
-        let write_result = writeln!(file.unwrap(), "{}", line);
-        if write_result.is_err() {
-            println!("writing log failed {}", line);
-        }
-    } else {
-        println!("logging failed: {}", line);
-    }
-}
-
-fn find_arm<'a, A: Identifiable>(arms : &'a [A], ident: &str) -> io::Result<&'a A> {
-    for arm in arms {
-        if arm.ident() == ident {
-            return Ok(arm);
-        }
-    }
-    Err(Error::new(ErrorKind::NotFound, format!("arm {} not found", ident)))
 }
 
 #[derive(Serialize, Deserialize)]
